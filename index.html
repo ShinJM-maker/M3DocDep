@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#ffffff">
+<title>M3DocDep</title>
+<meta name="description" content="M3DocDep: Multi-modal, Multi-page, Multi-document Dependency Chunking with Large Vision-Language Models. CVPR 2026.">
+<meta property="og:title" content="M3DocDep — Dependency-first chunking for industrial-document RAG">
+<meta property="og:description" content="Recover a global document dependency tree first, then chunk along it. +10.6% retrieval, +9.8% QA over the strongest baseline.">
+
+<link rel="stylesheet" href="./css/bulma.min.css">
+
+<style>
+  html, body {
+    background-color: #ffffff !important;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', 'Noto Sans KR', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #1a1a1a;
+  }
+  .publication-title {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #0a0a0a !important;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .publication-subtitle {
+    font-family: Georgia, 'Times New Roman', 'Noto Serif KR', serif;
+    font-weight: normal;
+    font-style: italic;
+    color: #2c2c2c !important;
+  }
+  .title, h1.title, h2.title, h3.title, h4.title, h5.title, h6.title {
+    color: #1a1a1a !important;
+  }
+  .subtitle.is-size-3 {
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  .content, .content p, .content li, .content td {
+    color: #2c2c2c;
+  }
+  p {
+    color: #2c2c2c;
+  }
+  .publication-authors {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Pretendard', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #2c2c2c;
+  }
+  .publication-authors a {
+    color: hsl(204, 86%, 33%) !important;
+  }
+  .publication-authors a:hover {
+    text-decoration: underline;
+  }
+  .author-block {
+    display: inline-block;
+    margin-right: 0.4em;
+  }
+  .publication-links {
+    margin-top: 1.5rem;
+  }
+  .link-block a {
+    margin: 0.25rem;
+  }
+  .hero.teaser .hero-body {
+    padding-top: 0;
+    padding-bottom: 3rem;
+  }
+  .hero-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  .hero.teaser .subtitle {
+    margin-top: 1.25rem;
+    font-size: 0.95rem;
+    color: #4a4a4a;
+  }
+  .section {
+    padding: 3rem 1.5rem;
+  }
+  pre.bibtex-block {
+    background-color: #f5f5f5;
+    color: #2c2c2c;
+    padding: 1.25rem 1.5rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    border-radius: 4px;
+    overflow-x: auto;
+    position: relative;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  /* Stat card dividers (desktop only) */
+  .stat-card-col {
+    position: relative;
+  }
+  @media (min-width: 769px) {
+    .stat-card-col:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 20%;
+      bottom: 20%;
+      width: 1px;
+      background: #d8d8d8;
+    }
+  }
+  .bibtex-wrapper {
+    position: relative;
+  }
+  .copy-btn {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    padding: 0.35rem 0.85rem;
+    background: white;
+    color: #555;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-size: 0.75rem;
+    font-family: monospace;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .copy-btn:hover {
+    background: #f0f0f0;
+  }
+  .copy-btn.copied {
+    background: #48c774;
+    color: white;
+    border-color: #48c774;
+  }
+  table.results {
+    margin: 1rem auto;
+    border-collapse: collapse;
+  }
+  table.results th, table.results td {
+    padding: 0.6rem 0.9rem;
+    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  table.results th {
+    font-weight: 600;
+    color: #555;
+    border-bottom: 2px solid #888;
+  }
+  table.results td:first-child, table.results th:first-child {
+    text-align: left;
+  }
+  table.results tr.lvlm td {
+    color: #999;
+    font-style: italic;
+  }
+  table.results tr.ours td {
+    border-top: 2px solid #c0392b;
+    font-weight: 600;
+    background: #fdf2f0;
+    color: #1a1a1a;
+  }
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-scroll table.results {
+    min-width: 480px;
+  }
+  .delta-positive {
+    color: #c0392b;
+    font-weight: 600;
+  }
+  .ablation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  .ablation-value {
+    font-weight: 700;
+    color: #c0392b;
+    font-size: 1.2rem;
+  }
+  .highlight-stat {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #c0392b;
+  }
+  .stat-card {
+    text-align: center;
+    padding: 1.5rem 1rem;
+  }
+  .stat-card .value {
+    font-family: 'Google Sans', sans-serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: #c0392b;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .stat-card .label {
+    color: #333;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  .stat-card .meta {
+    color: #888;
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+  .contribution-list {
+    margin-top: 1.5rem;
+  }
+  .contribution-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.1rem;
+    margin-bottom: 1.4rem;
+  }
+  .contribution-num {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    background: #c0392b;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-top: 0.1rem;
+  }
+  .contribution-text {
+    flex: 1;
+    color: #2c2c2c;
+    line-height: 1.55;
+  }
+  .contribution-text strong {
+    color: #1a1a1a;
+  }
+  /* Interactive Demo Widget */
+  .demo-widget {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.75rem;
+    margin-top: 1.25rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .demo-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+  .demo-question {
+    background: #f5f5f7;
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .demo-question p {
+    margin: 0;
+    font-size: 1.02rem;
+    color: #1a1a1a;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .demo-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  .demo-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.18s, border-color 0.18s;
+    font-family: inherit;
+  }
+  .demo-tab.active {
+    color: #c0392b;
+    border-bottom-color: #c0392b;
+  }
+  .demo-tab:hover:not(.active) {
+    color: #555;
+  }
+  .demo-chunks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .demo-chunk {
+    border-left: 3px solid #c4c4c4;
+    padding: 0.85rem 1rem;
+    background: #fafafa;
+    border-radius: 0 4px 4px 0;
+    font-size: 0.9rem;
+    color: #2c2c2c;
+    line-height: 1.5;
+  }
+  .demo-chunk.fragmented .demo-chunk-text {
+    color: #555;
+    font-style: italic;
+  }
+  .demo-chunk.fragmented .highlight {
+    color: #1a1a1a;
+    font-style: normal;
+    font-weight: 600;
+    background: #fff3cd;
+    padding: 0 3px;
+    border-radius: 2px;
+  }
+  .demo-chunk.structured {
+    border-left-color: #c0392b;
+    background: #fdf2f0;
+  }
+  .demo-chunk-header {
+    font-size: 0.72rem;
+    color: #888;
+    margin-bottom: 0.45rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .demo-chunk-path {
+    font-size: 0.85rem;
+    color: #c0392b;
+    margin-bottom: 0.55rem;
+    font-weight: 600;
+  }
+  .demo-chunk-meta {
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 0.55rem;
+    font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+  }
+  .demo-section {
+    margin-bottom: 1.4rem;
+  }
+  .demo-result {
+    display: flex;
+    gap: 0.85rem;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+  }
+  .demo-result.fail {
+    background: #fdedeb;
+    border: 1px solid #f5b8b0;
+  }
+  .demo-result.success {
+    background: #e6f4ea;
+    border: 1px solid #b7dfc4;
+  }
+  .demo-result-icon {
+    font-size: 1.4rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    line-height: 1.1;
+  }
+  .demo-result.fail .demo-result-icon { color: #c0392b; }
+  .demo-result.success .demo-result-icon { color: #1e8449; }
+  .demo-result-body strong { color: #1a1a1a; }
+  .demo-result-body small {
+    display: block;
+    margin-top: 0.5rem;
+    color: #555;
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+  /* Pill selector */
+  .pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.55rem;
+  }
+  .pill {
+    background: #ffffff;
+    border: 1.5px solid #d0d5dd;
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .pill:hover:not(.active) {
+    border-color: #888;
+    color: #1a1a1a;
+  }
+  .pill.active {
+    background: #1a2030;
+    border-color: #1a2030;
+    color: #ffffff;
+  }
+  /* Side-by-side comparison grid */
+  .cmp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+  .cmp-col {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.25rem;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+  }
+  .cmp-ours {
+    border-color: #c0392b;
+    background: #fffaf9;
+  }
+  .cmp-header {
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #eee;
+  }
+  .cmp-ours .cmp-header {
+    border-bottom-color: #f5d0c8;
+  }
+  .cmp-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #888;
+    margin-bottom: 0.35rem;
+  }
+  .cmp-tag-ours {
+    color: #c0392b;
+  }
+  .cmp-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 0.3rem 0;
+    line-height: 1.3;
+  }
+  .cmp-sub {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0;
+    line-height: 1.45;
+  }
+  .cmp-body {
+    flex: 1;
+    margin-bottom: 0.85rem;
+  }
+  @media (max-width: 768px) {
+    .cmp-grid {
+      grid-template-columns: 1fr;
+    }
+    .pill {
+      font-size: 0.82rem;
+      padding: 0.45rem 0.85rem;
+    }
+  }
+  /* Number comparison tables in widget */
+  table.num-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.3rem 0 0 0;
+    font-size: 0.9rem;
+  }
+  table.num-tbl td {
+    padding: 0.35rem 0;
+    border-bottom: 1px solid #eee;
+  }
+  table.num-tbl tr:last-child td {
+    border-bottom: none;
+  }
+  table.num-tbl td:first-child {
+    color: #2c2c2c;
+    font-weight: 500;
+    width: 45%;
+  }
+  table.num-tbl td:nth-child(2) {
+    text-align: right;
+    font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+    color: #1a1a1a;
+    font-size: 0.92rem;
+  }
+  table.num-tbl td:nth-child(3) {
+    text-align: right;
+    font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+    font-size: 0.78rem;
+    color: #999;
+    padding-left: 0.4rem;
+    width: 25%;
+  }
+  .cmp-ours table.num-tbl td:nth-child(3).delta-up {
+    color: #c0392b;
+    font-weight: 600;
+  }
+  /* 3-step Walkthrough */
+  .walkthrough {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem 1.5rem 1.75rem;
+  }
+  .walk-steps {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #e0e0e0;
+  }
+  .walk-step {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.85rem 0.5rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #888;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    justify-content: center;
+    font-family: inherit;
+    transition: color 0.18s, border-color 0.18s;
+  }
+  .walk-step:hover:not(.active) {
+    color: #555;
+  }
+  .walk-step.active {
+    color: #c0392b;
+    border-bottom-color: #c0392b;
+  }
+  .walk-num {
+    display: inline-flex;
+    width: 1.65rem;
+    height: 1.65rem;
+    align-items: center;
+    justify-content: center;
+    background: #e8e8e8;
+    color: #555;
+    border-radius: 50%;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .walk-step.active .walk-num {
+    background: #c0392b;
+    color: #ffffff;
+  }
+  .walk-pane {
+    display: none;
+  }
+  .walk-pane.active {
+    display: block;
+  }
+  .walk-desc {
+    color: #2c2c2c;
+    line-height: 1.65;
+    margin-bottom: 1.25rem;
+  }
+  .walk-desc code {
+    background: #f4f4f5;
+    padding: 0.08rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.88em;
+    color: #1a1a1a;
+  }
+  .walk-img-wrap {
+    text-align: center;
+    background: #fafafa;
+    border-radius: 6px;
+    padding: 1rem;
+  }
+  .walk-img-wrap img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  .walk-img-stack img {
+    max-height: 600px;
+  }
+  .walk-img-card img {
+    max-height: 700px;
+  }
+  /* Chunk cards within the comparison widget */
+  .chunk-card {
+    background: #fafafa;
+    border-left: 3px solid #c4c4c4;
+    border-radius: 0 4px 4px 0;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 0.65rem;
+    font-size: 0.85rem;
+    line-height: 1.55;
+    color: #2c2c2c;
+  }
+  .cmp-ours .chunk-card {
+    background: #fff5f3;
+    border-left-color: #c0392b;
+  }
+  .chunk-num {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #888;
+    margin-bottom: 0.35rem;
+  }
+  .cmp-ours .chunk-num {
+    color: #c0392b;
+  }
+  .chunk-meta {
+    display: block;
+    font-size: 0.78rem;
+    color: #c0392b;
+    font-family: ui-monospace, 'SF Mono', Consolas, monospace;
+    margin-bottom: 0.35rem;
+    font-weight: 600;
+  }
+  .chunk-meta-pages {
+    color: #888;
+    font-weight: normal;
+  }
+  .chunk-bracket {
+    color: #888;
+    font-style: italic;
+  }
+  .chunk-text {
+    color: #2c2c2c;
+  }
+  .chunk-figure {
+    margin: 0.6rem 0;
+    padding: 0.6rem;
+    background: #ffffff;
+    border: 1px solid #f0d4cf;
+    border-radius: 4px;
+    text-align: center;
+  }
+  .chunk-figure img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) {
+    .walk-step {
+      font-size: 0.82rem;
+      padding: 0.7rem 0.3rem;
+    }
+    .walk-label {
+      display: none;
+    }
+    .walk-step .walk-num {
+      width: 2rem;
+      height: 2rem;
+      font-size: 1rem;
+    }
+  }
+  footer.footer {
+    background-color: #fafafa;
+    padding: 2rem 1.5rem;
+  }
+  footer .content {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #777;
+  }
+  footer .content a {
+    color: #3273dc;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════ HERO ════════════ -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+
+          <h1 class="title is-1 publication-title">M3DocDep</h1>
+          <h2 class="subtitle is-size-3 publication-subtitle">
+            Multi-modal, Multi-page, Multi-document Dependency Chunking<br>
+            with Large Vision-Language Models
+          </h2>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">
+              <a href="https://shinjm-maker.github.io/index.html" target="_blank" rel="noopener">Joongmin Shin</a><sup>1</sup>,
+            </span>
+            <span class="author-block">
+              Jeongbae Park<sup>1</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://j-seo.github.io/" target="_blank" rel="noopener">Jaehyung Seo</a><sup>2&dagger;</sup>,
+            </span>
+            <span class="author-block">
+              <a href="https://scholar.google.co.kr/citations?user=HMTkz7oAAAAJ&amp;hl=ko&amp;oi=ao" target="_blank" rel="noopener">Heuiseok Lim</a><sup>1,3&dagger;</sup>
+            </span>
+          </div>
+
+          <div class="is-size-6 publication-authors" style="margin-top: 0.6rem;">
+            <span class="author-block"><sup>1</sup>Human-inspired AI Research, Korea University</span> &nbsp;
+            <span class="author-block"><sup>2</sup>CSE, Konkuk University</span> &nbsp;
+            <span class="author-block"><sup>3</sup>CSE, Korea University</span>
+          </div>
+          <div class="is-size-7" style="margin-top: 0.3rem; color: #888;">
+            <sup>†</sup>Corresponding authors
+          </div>
+
+          <div class="is-size-6" style="margin-top: 1rem; color: #c0392b; font-weight: 600; font-family: 'Google Sans', sans-serif;">
+            CVPR 2026
+          </div>
+
+          <!-- Buttons -->
+          <div class="publication-links">
+            <span class="link-block">
+              <a href="https://openaccess.thecvf.com/content/CVPR2026/papers/Shin_M3DocDep_Multi-modal_Multi-page_Multi-document_Dependency_Chunking_with_Large_Vision-Language_Models_CVPR_2026_paper.pdf" class="external-link button is-normal is-rounded is-dark" target="_blank" rel="noopener">
+                <span class="icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm4 18H6V4h7v5h5v11zM9 13h2v5H9v-5zm4 0h2v5h-2v-5z"/>
+                  </svg>
+                </span>
+                <span>Paper</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="https://openaccess.thecvf.com/content/CVPR2026/supplemental/Shin_M3DocDep_Multi-modal_Multi-page_CVPR_2026_supplemental.pdf" class="external-link button is-normal is-rounded is-dark" target="_blank" rel="noopener">
+                <span class="icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M16.5 6v11.5a4 4 0 0 1-8 0V5a2.5 2.5 0 0 1 5 0v10.5a1 1 0 0 1-2 0V6H10v9.5a2.5 2.5 0 0 0 5 0V5a4 4 0 0 0-8 0v12.5a5.5 5.5 0 0 0 11 0V6h-1.5z"/>
+                  </svg>
+                </span>
+                <span>Supplementary</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="https://arxiv.org/abs/2605.18774" class="external-link button is-normal is-rounded is-dark" target="_blank" rel="noopener">
+                <span class="icon" style="font-family: 'Times New Roman', serif; font-style: italic; font-weight: 700; font-size: 1em; line-height: 1;">𝛼</span>
+                <span>arXiv</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="javascript:void(0);" class="external-link button is-normal is-rounded is-dark" style="opacity: 0.55; cursor: not-allowed;" title="Demo will be added once available">
+                <span class="icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                  </svg>
+                </span>
+                <span>Demo</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a href="#bibtex" class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M9.983 3v7.391c0 5.704-3.731 9.57-8.983 10.609l-.995-2.151c2.432-.917 3.995-3.638 3.995-5.849H0V3h9.983zm14.017 0v7.391c0 5.704-3.748 9.571-9 10.609l-.996-2.151c2.433-.917 3.996-3.638 3.996-5.849h-3.983V3H24z"/>
+                  </svg>
+                </span>
+                <span>BibTeX</span>
+              </a>
+            </span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ TEASER FIGURE ════════════ -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <img src="./assets/architecture.png" alt="M3DocDep pipeline overview">
+      <p class="subtitle" style="max-width: 800px; margin: 1.25rem auto 0; text-align: left;">
+        <strong>Figure 1.</strong> The M3DocDep pipeline.
+        (a) <em>SharedDet</em> produces global document blocks via document parsing + OCR in a unified coordinate frame.
+        (b) A frozen LVLM yields page multi-modal tokens; the SoftROI embedder pools tokens inside each block with boundary-aware weighting.
+        (c) A biaffine head scores parent candidates; an MST decoder returns a globally valid dependency tree.
+        (d) Tree-guided chunking traverses section subtrees and binds figures/tables to their captions.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ ABSTRACT ════════════ -->
+<section class="section" style="padding-top: 1.5rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content" style="text-align: left;">
+          <p>
+            In large-scale industrial documents with scanned images, complex layouts, and multiple pages, the effectiveness of retrieval-augmented generation (RAG) is highly dependent on chunking quality. Existing text-centric chunkers overlook the visual and structural cues present in real-world documents, leading to redundant or ambiguous chunks that impair retrieval and answer accuracy.
+          </p>
+          <p>
+            We propose <strong>M3DocDep</strong>, which integrates (i) <em>SharedDet</em> for normalizing document parsing and OCR outputs into a document-level frame, (ii) multi-modal block embeddings with boundary-aware <em>SoftROI</em>, (iii) global document-tree reconstruction via biaffine scoring, and (iv) structure-aware dependency chunking that preserves boundaries and reduces redundancy.
+          </p>
+          <p>
+            M3DocDep achieves consistent gains across both Document Hierarchical Parsing (DHP) and corpus-level RAG evaluations, improving <strong>STEDS by +28.5–39.6%</strong>, <strong>retrieval nDCG by +1.1–15.3%</strong>, and <strong>QA ANLS by +4.5–15.3%</strong>. These results demonstrate that modeling document-level dependencies with multi-modal, structure-aware chunking improves RAG performance on long, multi-page industrial documents.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ CONTRIBUTIONS ════════════ -->
+<section class="section" style="padding-top: 1rem; padding-bottom: 1.5rem;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Contributions</h2>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <div class="contribution-list">
+          <div class="contribution-item">
+            <span class="contribution-num">1</span>
+            <div class="contribution-text">
+              <strong>LVLM-based dependency scoring framework.</strong> Multi-modal block embeddings from a frozen LVLM, combined with parent–child edge scoring, recover a global document tree — including long-range, cross-page parent–child relations.
+            </div>
+          </div>
+          <div class="contribution-item">
+            <span class="contribution-num">2</span>
+            <div class="contribution-text">
+              <strong>Tree-guided structure-aware chunking.</strong> Chunks are assembled along recovered section subtrees, preserving figure/table–caption bindings and annotating each chunk with section-path metadata — yielding retrieval units compatible with corpus-level RAG.
+            </div>
+          </div>
+          <div class="contribution-item">
+            <span class="contribution-num">3</span>
+            <div class="contribution-text">
+              <strong>Validation under a shared evaluation protocol.</strong> With the same SharedDet blocks, the same chunk budget, and the same retrievers and readers — and robustness checks under DP, OCR, and embedding swaps — M3DocDep consistently improves hierarchy recovery, retrieval quality, and QA accuracy.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ KEY RESULTS (BIG NUMBERS) ════════════ -->
+<section class="section" style="background-color: #fafafa;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column has-text-centered">
+        <h2 class="title is-3">Headline results</h2>
+        <p class="subtitle is-size-6" style="color: #666;">Relative improvement over the strongest chunking baseline (MultiDocFusion).</p>
+      </div>
+    </div>
+    <div class="columns is-centered" style="margin-top: 1rem;">
+      <div class="column is-one-third stat-card-col">
+        <div class="stat-card">
+          <div class="value">+10.6%</div>
+          <div class="label">avg retrieval nDCG gain</div>
+          <div class="meta">range +1.1 to +15.3% (4 corpora)</div>
+        </div>
+      </div>
+      <div class="column is-one-third stat-card-col">
+        <div class="stat-card">
+          <div class="value">+9.8%</div>
+          <div class="label">avg QA ANLS gain</div>
+          <div class="meta">range +4.5 to +15.3% (4 corpora)</div>
+        </div>
+      </div>
+      <div class="column is-one-third stat-card-col">
+        <div class="stat-card">
+          <div class="value">~5×</div>
+          <div class="label">STEDS over plain LVLM</div>
+          <div class="meta">on document hierarchical parsing</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ METHOD ════════════ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Method</h2>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <div class="content">
+          <p>
+            M3DocDep treats chunking as a dependency-recovery problem. Before chunking, we reconstruct a <em>global document dependency tree</em> using a vision-language model, then assemble chunks from coherent section subtrees of that tree. The pipeline has four stages:
+          </p>
+
+          <h3 class="title is-4" style="margin-top: 2.25rem;"><span style="color: #c0392b;">(a)</span> SharedDet (DP + OCR)</h3>
+          <p>
+            Run document parsing and OCR once per document to obtain a stable set of layout blocks — titles, headers, text, tables, figures, captions — in a unified coordinate frame. These <strong>Global Document Blocks</strong> are shared across all downstream models, ensuring fair component-wise comparison.
+          </p>
+
+          <h3 class="title is-4" style="margin-top: 2.25rem;"><span style="color: #c0392b;">(b)</span> LVLM-based multi-modal block embedding</h3>
+          <p>
+            Each page passes through a frozen vision-language model (e.g., Qwen2.5-VL, LLaVA-OneVision-1.5, InternVL-3.5) to produce <strong>Page Multi-modal Tokens</strong>. A <em>SoftROI Embedder</em> then pools tokens inside each block with a boundary-aware weighting that is robust to box jitter and OCR noise, yielding a multi-modal embedding per block.
+          </p>
+
+          <h3 class="title is-4" style="margin-top: 2.25rem;"><span style="color: #c0392b;">(c)</span> Global Document Dependency Parsing</h3>
+          <p>
+            For each block, a <em>biaffine scoring head</em> scores parent candidates over the block embeddings, with a header-centric prior that restricts candidates to plausible attachments. An <em>MST decoder</em> then turns the edge scores into a globally valid dependency tree — single root, single parent, acyclic, including cross-page links. This replaces the long-form sequence generation used by SFT-based LVLMs.
+          </p>
+
+          <h3 class="title is-4" style="margin-top: 2.25rem;"><span style="color: #c0392b;">(d)</span> Structure-aware dependency chunking</h3>
+          <p>
+            We traverse the recovered tree by section subtree (DFS), force figures and tables to stay with their captions via tree-link binding, and annotate every chunk with its section path, page range, and constituent block IDs. The resulting chunks align retrieval units with true semantic and hierarchical structure.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ QUALITATIVE EXAMPLE ════════════ -->
+<section class="section" style="background-color: #fafafa;">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Qualitative example</h2>
+        <p class="content" style="text-align: left;">
+          A real case from the paper: a five-page physics paper on photon trajectories in the equatorial plane of a Kerr black hole. <strong>Fig. 1 sits on page 2; its caption continues across a column boundary.</strong> We trace M3DocDep end-to-end — from raw multi-page input, to the recovered dependency tree, to the structure-aware chunk it emits.
+        </p>
+      </div>
+    </div>
+
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <div class="walkthrough">
+
+          <div class="walk-steps" role="tablist">
+            <button class="walk-step active" data-step="1" role="tab" aria-selected="true">
+              <span class="walk-num">1</span><span class="walk-label">Raw document</span>
+            </button>
+            <button class="walk-step" data-step="2" role="tab" aria-selected="false">
+              <span class="walk-num">2</span><span class="walk-label">Dependency tree</span>
+            </button>
+            <button class="walk-step" data-step="3" role="tab" aria-selected="false">
+              <span class="walk-num">3</span><span class="walk-label">Structure-aware chunk</span>
+            </button>
+          </div>
+
+          <div class="walk-pane active" data-pane="1">
+            <p class="walk-desc">
+              <strong>Input.</strong> A 5-page physics paper. <strong>Fig. 1</strong> appears on page 2; the surrounding section content (title, intro, body paragraphs, caption) is scattered across pages 1–3. Naive chunkers slice this stack by tokens or sentence boundaries — losing the figure–caption binding the first time a page break gets in the way.
+            </p>
+            <div class="walk-img-wrap walk-img-stack">
+              <img src="./assets/paper_multipage_stack.png" alt="The 5-page input document with page 2 highlighted">
+            </div>
+          </div>
+
+          <div class="walk-pane" data-pane="2">
+            <p class="walk-desc">
+              <strong>Dependency tree.</strong> M3DocDep treats every layout block (title, section-title, text, figure, figure-caption) as a node and learns parent–child edges across the whole document — <em>including cross-page links</em>. The <span style="color:#e67e22; font-weight:600;">orange Key Path</span> highlights the dependency chain this chunk follows: <code>ROOT → 1:title → 17:section-title → 19:figure → 20:figure-caption</code>.
+            </p>
+            <div class="walk-img-wrap">
+              <img src="./assets/paper_hierarchy_tree.png" alt="Recovered dependency tree with Key Path highlighted">
+            </div>
+          </div>
+
+          <div class="walk-pane" data-pane="3">
+            <p class="walk-desc">
+              <strong>Output.</strong> The structure-aware chunk M3DocDep emits. It records the <strong>section path</strong> (<code># Title › ## 1. Intro</code>), the <strong>page range</strong> spanned (<code>2</code>), the <strong>figure block</strong> with its bound <strong>caption</strong>, and the explicit <strong>dependency edge</strong> (<code>19:figure → 20:caption</code>). This is the retrieval unit used at RAG time — the reader sees the figure with its caption and its enclosing section all in one shot.
+            </p>
+            <div class="walk-img-wrap walk-img-card">
+              <img src="./assets/paper_chunk_card.png" alt="The final structure-aware chunk card emitted by M3DocDep">
+            </div>
+          </div>
+
+        </div>
+        <p style="font-size:0.78rem; color:#888; font-style:italic; text-align:center; margin-top:0.85rem;">
+          Figures reproduced from the paper's supplementary qualitative example.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ INTERACTIVE DEMO ════════════ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Try it: Compare actual chunks per baseline</h2>
+        <p class="content">
+          Reproduced from the supplementary's <em>Table on chunking comparisons</em>: for the same Kerr black hole input, each method produces its own 3 chunks. Switch baselines to see how M3DocDep's structure-aware chunks differ from the rest.
+        </p>
+      </div>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <div class="demo-widget">
+
+          <!-- Baseline selector pills -->
+          <div style="margin-bottom: 1.5rem;">
+            <span class="demo-label">Select a baseline</span>
+            <div class="pill-group">
+              <button class="pill active" data-bl="length">Length</button>
+              <button class="pill" data-bl="semantic">Semantic</button>
+              <button class="pill" data-bl="lumber">LumberChunker</button>
+              <button class="pill" data-bl="perplexity">Perplexity</button>
+              <button class="pill" data-bl="structure">Structure-based</button>
+              <button class="pill" data-bl="mdf">MultiDocFusion</button>
+            </div>
+          </div>
+
+          <div class="cmp-grid">
+
+            <!-- Left: selected baseline -->
+            <div class="cmp-col cmp-baseline">
+              <div class="cmp-header">
+                <span class="cmp-tag">Baseline</span>
+                <h4 class="cmp-title" id="blName">Length chunking</h4>
+                <p class="cmp-sub" id="blSub">Fixed-size token windows.</p>
+              </div>
+              <div class="cmp-body" id="blChunks"></div>
+            </div>
+
+            <!-- Right: M3DocDep -->
+            <div class="cmp-col cmp-ours">
+              <div class="cmp-header">
+                <span class="cmp-tag cmp-tag-ours">M3DocDep (ours)</span>
+                <h4 class="cmp-title">Tree-guided structure-aware chunking</h4>
+                <p class="cmp-sub">Global dependency tree → section subtree chunks with section_path and page metadata.</p>
+              </div>
+              <div class="cmp-body" id="ourChunks"></div>
+            </div>
+
+          </div>
+
+          <p style="text-align:center; font-size:0.78rem; color:#999; font-style:italic; margin-top:1rem;">
+            Chunk texts are exactly as reported in the supplementary's <code>tab:chunking_examples</code>; truncations marked with …
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ RESULTS ════════════ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3" style="margin-bottom: 1rem;">Results</h2>
+        <p class="content" style="margin-bottom: 2.5rem;">
+          Evaluated on four corpora — <strong>DUDE</strong>, <strong>MP-DocVQA</strong>, <strong>CUAD</strong>, <strong>MOAMOB</strong> — covering financial reports, contracts, scanned forms, and complex layouts.
+        </p>
+      </div>
+    </div>
+
+    <!-- DHP table -->
+    <div class="columns is-centered">
+      <div class="column is-four-fifths">
+        <h3 class="title is-5 has-text-centered" style="margin-bottom: 1rem;">Document Hierarchical Parsing (DHP) — F1 / STEDS (%)</h3>
+        <div class="table-scroll">
+          <table class="results" style="width: 100%; max-width: 720px; margin: 0 auto;">
+            <thead>
+              <tr>
+                <th></th>
+                <th>HRDS</th>
+                <th>HRDH</th>
+                <th>DocHieNet</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="lvlm">
+                <td>Qwen2.5-VL <small>(LVLM only)</small></td>
+                <td>28.4 / 14.5</td>
+                <td>27.6 / 20.0</td>
+                <td>18.2 / 9.6</td>
+              </tr>
+              <tr>
+                <td>DSPS</td>
+                <td>65.3 / 59.6</td>
+                <td>54.1 / 38.4</td>
+                <td>35.6 / 23.8</td>
+              </tr>
+              <tr>
+                <td>DSHP-LLM</td>
+                <td>44.9 / 29.5</td>
+                <td>61.3 / 51.3</td>
+                <td>64.3 / 53.5</td>
+              </tr>
+              <tr class="ours">
+                <td>M3DocDep (ours)</td>
+                <td>82.9 / 76.5</td>
+                <td>77.8 / 71.7</td>
+                <td>76.0 / 70.8</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="has-text-centered" style="font-size: 0.85rem; color: #888; font-style: italic; margin-top: 0.5rem;">
+          ~5× STEDS over a plain LVLM. Structural constraints (header-centric priors, MST decoding, cross-page edges) matter.
+        </p>
+      </div>
+    </div>
+
+    <!-- QA and Ablation side by side -->
+    <div class="columns is-centered" style="margin-top: 2rem;">
+      <div class="column is-half">
+        <h3 class="title is-5 has-text-centered">Downstream QA — ANLS (%)</h3>
+        <table class="results" style="width: 100%;">
+            <thead>
+              <tr>
+                <th>Dataset</th>
+                <th>Ours</th>
+                <th>Δ vs. MultiDocFusion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>DUDE</td><td><strong>21.4</strong></td><td class="delta-positive">+2.84</td></tr>
+              <tr><td>MP-DocVQA</td><td><strong>18.2</strong></td><td class="delta-positive">+2.02</td></tr>
+              <tr><td>CUAD</td><td><strong>29.3</strong></td><td class="delta-positive">+1.87</td></tr>
+              <tr><td>MOAMOB</td><td><strong>27.1</strong></td><td class="delta-positive">+1.18</td></tr>
+            </tbody>
+          </table>
+        <p class="has-text-centered" style="font-size: 0.8rem; color: #888; font-style: italic; margin-top: 0.5rem;">
+          Averaged over LLaVA-OneVision-1.5, InternVL-3.5, Qwen2.5-VL readers.
+        </p>
+      </div>
+
+      <div class="column is-half">
+        <h3 class="title is-5 has-text-centered">Ablation — STEDS drop</h3>
+        <div style="max-width: 380px; margin: 0 auto;">
+          <div class="ablation-row">
+            <span>No cross-page edges</span>
+            <span class="ablation-value">−9.26</span>
+          </div>
+          <div class="ablation-row">
+            <span>MST → local argmax</span>
+            <span class="ablation-value">−6.70</span>
+          </div>
+          <div class="ablation-row">
+            <span>No header-centric prior</span>
+            <span class="ablation-value">−2.55</span>
+          </div>
+          <div class="ablation-row">
+            <span>SoftROI → uniform pooling</span>
+            <span class="ablation-value">−1.70</span>
+          </div>
+        </div>
+        <p class="has-text-centered" style="font-size: 0.8rem; color: #888; font-style: italic; margin-top: 0.5rem;">
+          Avg STEDS drop across 3 datasets (HRDS · HRDH · DocHieNet).
+        </p>
+      </div>
+    </div>
+
+    <!-- Robustness -->
+    <div class="columns is-centered" style="margin-top: 1rem;">
+      <div class="column is-four-fifths">
+        <div class="notification" style="background-color: #fff9f3; border-left: 4px solid #c0392b;">
+          <h3 class="title is-5">Robust to component swaps</h3>
+          <p>
+            M3DocDep is <strong>top-1 nDCG</strong> under every individual pipeline swap: <strong>3 DP backbones</strong> (DETR, DiT, VGT), <strong>3 OCR engines</strong> (Tesseract, EasyOCR, TrOCR), and <strong>4 embedding models</strong> (BGE, E5, BM25, MM-Embed). Backbone-agnostic by design.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ BIBTEX ════════════ -->
+<section class="section" id="bibtex" style="background-color: #fafafa;">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3">BibTeX</h2>
+    <div class="bibtex-wrapper">
+      <button class="copy-btn" id="copyBibtex">COPY</button>
+<pre class="bibtex-block" id="bibtexText">@InProceedings{Shin_2026_CVPR,
+    author    = {Shin, Joongmin and Park, Jeongbae and Seo, Jaehyung and Lim, Heuiseok},
+    title     = {M3DocDep: Multi-modal, Multi-page, Multi-document Dependency Chunking with Large Vision-Language Models},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2026},
+    pages     = {16603-16613}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════ FOOTER ════════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="content">
+      <p>
+        This website is licensed under a
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+      </p>
+      <p>
+        Website template adapted from <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a>.
+      </p>
+      <p style="margin-top: 1rem; font-size: 0.8rem; color: #999;">
+        © 2026 Joongmin Shin, Jeongbae Park, Jaehyung Seo, Heuiseok Lim.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('copyBibtex').addEventListener('click', function() {
+    const text = document.getElementById('bibtexText').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      this.textContent = 'COPIED';
+      this.classList.add('copied');
+      setTimeout(() => {
+        this.textContent = 'COPY';
+        this.classList.remove('copied');
+      }, 1800);
+    });
+  });
+
+  // 3-step Qualitative walkthrough
+  document.querySelectorAll('.walk-step').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const step = btn.dataset.step;
+      document.querySelectorAll('.walk-step').forEach(s => {
+        s.classList.remove('active');
+        s.setAttribute('aria-selected', 'false');
+      });
+      document.querySelectorAll('.walk-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      document.querySelector(`.walk-pane[data-pane="${step}"]`).classList.add('active');
+    });
+  });
+
+  // Actual chunk texts from supplementary's Table on chunking comparisons (Kerr black hole paper input)
+  // Truncations marked with … exactly as in the paper.
+
+  const m3Chunks = [
+    {
+      meta: '<span class="chunk-meta">section_path: # Accurate closed-form trajectories…</span><span class="chunk-meta chunk-meta-pages">pages: 1</span>',
+      text: '<span class="chunk-bracket">[Title and front matter]</span> Ryne J. Beachley¹, Morgan Mistysyn², Joshua A. Faber¹·⁴ … <strong>Abstract.</strong> Highly accurate closed-form expressions … Keywords: Geodesics, Light deflection, Kerr black holes. Submitted to: Class. Quantum Grav.'
+    },
+    {
+      meta: '<span class="chunk-meta">section_path: # Accurate closed-form trajectories &gt; ## 1. Introduction</span><span class="chunk-meta chunk-meta-pages">pages: 1–2 (cross-page)</span>',
+      text: 'Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity … The null geodesics describing photon trajectories have been investigated for a wide variety of physical configurations in a number of limits …'
+    },
+    {
+      meta: '<span class="chunk-meta">section_path: # Accurate closed-form trajectories &gt; ## 1. Introduction</span><span class="chunk-meta chunk-meta-pages">pages: 2</span>',
+      text: '<span class="chunk-bracket">[Figure region + Caption]</span><div class="chunk-figure"><img src="./assets/paper_figure_crop.png" alt="Cropped figure region: photon trajectory schematic"></div><strong>Figure 1:</strong> Schematic of photon trajectory in the equatorial plane of a Kerr black hole, parametrized as <em>r = r(φ)</em>. The labeled photon trajectory shows the relationship between the impact parameter <em>b</em>, radial distance <em>r</em>, azimuthal angle <em>φ</em>, and bending angle <em>α</em> …'
+    }
+  ];
+
+  const baselines = {
+    length: {
+      name: "Length chunking",
+      sub: "Fixed-size token windows. Cuts blindly at token limits, no metadata.",
+      chunks: [
+        'Accurate closed-form trajectories of light around a Kerr black hole using asymptotic approximants — Ryne J. Beachley¹, Morgan Mistysyn², Joshua A. Faber¹·⁴, Steven J. Weinstein³·⁴, Nathaniel S. Barlow¹·⁴. 1 School of Mathematical Sciences, Rochester Institute of Technology, Rochester, NY 14623 … Abstract. Highly accurate closed-form expressions that describe the full trajectory of photons propagating in the equatorial plane of a Kerr black hole are obtained using asymptotic approximants …',
+        'This work extends a prior study of the overall bending angle for photons (Barlow et al. 2017, Class. Quantum Grav., 34, 135017). The expressions obtained provide accurate trajectory predictions for arbitrary spin and impact parameters … Keywords: Geodesics, Light deflection, Kerr black holes, Asymptotic approximants. Submitted to: Class. Quantum Grav. …',
+        '<strong>1. Introduction</strong> Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity … After the initial construction of the Kerr metric describing spinning black holes, many of the early results on null geodesics in these spacetimes were derived by Carter …'
+      ]
+    },
+    semantic: {
+      name: "Semantic chunking",
+      sub: "Splits where sentence embeddings drop in similarity. No section info.",
+      chunks: [
+        'Accurate closed-form trajectories of light around a Kerr black hole using asymptotic approximants — Ryne J. Beachley¹, Morgan Mistysyn², Joshua A. Faber¹·⁴, Steven J. Weinstein³·⁴, Nathaniel S. Barlow¹·⁴. 1 School of Mathematical Sciences …; 2 Department of Industrial and Systems Engineering; 3 Department of Chemical Engineering; 4 Center for Computational Relativity and Gravitation … E-mail: nsbsma@rit.edu …',
+        '<strong>Abstract.</strong> Highly accurate closed-form expressions that describe the full trajectory of photons propagating in the equatorial plane of a Kerr black hole are obtained using asymptotic approximants. This work extends a prior study … To construct approximants, asymptotic expansions for photon deflection are required in various limits … new coefficients are reported for the bending angle in the weak-field limit (large impact parameter) …',
+        '<strong>1. Introduction</strong> Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity … The limit where photons approach the innermost circular orbit (ICO), referred to as the strong-field limit, has also been explored for decades … We refer readers to Chandrasekhar\'s work on the subject for a thorough review on geodesics in black hole spacetimes …'
+      ]
+    },
+    lumber: {
+      name: "LumberChunker",
+      sub: "LLM-driven boundary detection. No section_path or page metadata.",
+      chunks: [
+        'Accurate closed-form trajectories of light around a Kerr black hole using asymptotic approximants — <span class="chunk-bracket">[title and front matter]</span> Ryne J. Beachley¹, Morgan Mistysyn², Joshua A. Faber¹·⁴, Steven J. Weinstein³·⁴, Nathaniel S. Barlow¹·⁴ … Abstract. Highly accurate closed-form expressions that describe the full trajectory of photons propagating in the equatorial plane of a Kerr black hole are obtained using asymptotic approximants …',
+        '<strong>Abstract.</strong> Highly accurate closed-form expressions that describe the full trajectory of photons … The expressions obtained provide accurate trajectory predictions for arbitrary spin and impact parameters … Keywords: Geodesics, Light deflection, Kerr black holes, Asymptotic approximants. Submitted to: Class. Quantum Grav. <strong>1. Introduction</strong> Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity …',
+        '<strong>1. Introduction</strong> Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity … The limit where photons approach the innermost circular orbit (ICO) has also been explored for decades … <strong>Figure 1:</strong> Schematic of photon trajectory in the equatorial plane of a Kerr black hole, parametrized as r = r(φ), showing the relationship between impact parameter b, radial distance r, azimuthal angle φ, and bending angle α …'
+      ]
+    },
+    perplexity: {
+      name: "Perplexity chunking",
+      sub: "Splits at perplexity spikes. Text only.",
+      chunks: [
+        'Accurate closed-form trajectories of light around a Kerr black hole using asymptotic approximants — Ryne J. Beachley¹, Morgan Mistysyn², Joshua A. Faber¹·⁴, Steven J. Weinstein³·⁴, Nathaniel S. Barlow¹·⁴ … 1 School of Mathematical Sciences, Rochester Institute of Technology, Rochester, NY 14623 … Keywords: Geodesics, Light deflection, Kerr black holes, Asymptotic approximants …',
+        '<strong>Abstract.</strong> Highly accurate closed-form expressions that describe the full trajectory of photons propagating in the equatorial plane of a Kerr black hole are obtained using asymptotic approximants. This work extends a prior study of the overall bending angle for photons (Barlow et al. 2017, Class. Quantum Grav., 34, 135017). The expressions obtained provide accurate trajectory predictions for arbitrary spin and impact parameters …',
+        'Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity, and one of the best understood aspects of the theory … The limit where photons approach the innermost circular orbit (ICO) has also been explored for decades … <strong>Figure 1:</strong> Schematic of photon trajectory in the equatorial plane of a Kerr black hole, parametrized as r = r(φ) …'
+      ]
+    },
+    structure: {
+      name: "Structure-based chunking",
+      sub: "Layout-detected blocks. Type labels only, no section path or pages.",
+      chunks: [
+        '<span class="chunk-bracket">[Title block]</span> Accurate closed-form trajectories of light around a Kerr black hole using asymptotic approximants — Ryne J. Beachley¹, Morgan Mistysyn², Joshua A. Faber¹·⁴ … Abstract. Highly accurate closed-form expressions that describe the full trajectory of photons … Keywords: Geodesics, Light deflection, Kerr black holes. Submitted to: Class. Quantum Grav.',
+        '<span class="chunk-bracket">[Section: 1. Introduction]</span> Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity … The limit where photons approach the innermost circular orbit (ICO) has also been explored for decades …',
+        '<span class="chunk-bracket">[Figure + Caption]</span> <strong>Figure 1:</strong> Schematic of photon trajectory in the equatorial plane of a Kerr black hole, parametrized as r = r(φ). The labeled photon trajectory shows the relationship between the impact parameter b, radial distance r, azimuthal angle φ, and bending angle α …'
+      ]
+    },
+    mdf: {
+      name: "MultiDocFusion",
+      sub: "Adds LLM-inferred section_path. But path can be misaligned (Chunk 3 attached to wrong section).",
+      chunks: [
+        '<span class="chunk-meta">section_path: # Accurate closed-form trajectories…</span><span class="chunk-bracket">[Title and front matter]</span> Ryne J. Beachley¹ … <strong>Abstract.</strong> Highly accurate closed-form expressions … Keywords: Geodesics, Light deflection, Kerr black holes …',
+        '<span class="chunk-meta">section_path: # Accurate closed-form trajectories &gt; ## 1. Introduction</span>Light deflection in curved spacetimes is one of the earliest predictions of Einstein\'s general theory of relativity … The null geodesics describing photon trajectories have been investigated for a wide variety of physical configurations …',
+        '<span class="chunk-meta" style="color:#b22;">section_path: # Accurate closed-form trajectories &gt; ## 2. Light deflection ⚠️</span><strong>Figure 1:</strong> Schematic of photon trajectory in the equatorial plane of a Kerr black hole, parametrized as r = r(φ) … <span class="chunk-bracket">(MultiDocFusion misattributes Fig.1 to a non-existent §2 because the section_path is inferred from text alone.)</span>'
+      ]
+    }
+  };
+
+  function renderChunks(containerEl, chunks, isOurs) {
+    containerEl.innerHTML = chunks.map((c, i) => {
+      if (isOurs) {
+        return `<div class="chunk-card">
+          <span class="chunk-num">Chunk ${i+1}</span>
+          ${c.meta || ''}
+          <span class="chunk-text">${c.text}</span>
+        </div>`;
+      } else {
+        return `<div class="chunk-card">
+          <span class="chunk-num">Chunk ${i+1}</span>
+          <span class="chunk-text">${c}</span>
+        </div>`;
+      }
+    }).join('');
+  }
+
+  function renderBaseline(key) {
+    const b = baselines[key];
+    if (!b) return;
+    document.getElementById('blName').textContent = b.name;
+    document.getElementById('blSub').textContent = b.sub;
+    renderChunks(document.getElementById('blChunks'), b.chunks, false);
+    renderChunks(document.getElementById('ourChunks'), m3Chunks, true);
+  }
+
+  // Wire up pills
+  document.querySelectorAll('.pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      renderBaseline(pill.dataset.bl);
+    });
+  });
+
+  // Initial render
+  renderBaseline('length');
+</script>
+
+</body>
+</html>
