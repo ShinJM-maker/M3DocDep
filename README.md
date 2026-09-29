@@ -2,6 +2,8 @@
 
 CVPR 2026 paper project page for M3DocDep: Multi-modal, Multi-page, Multi-document Dependency Chunking with Large Vision-Language Models.
 
+[[Project Page](https://shinjm-maker.github.io/M3DocDep/)] [[Publication Page](https://shinjm-maker.github.io/publications/m3docdep.html)]
+
 ## Files
 
 ```
