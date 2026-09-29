@@ -1,81 +1,34 @@
-# M3DocDep — Project Page
+# M3DocDep
 
-CVPR 2026 paper project page for M3DocDep: Multi-modal, Multi-page, Multi-document Dependency Chunking with Large Vision-Language Models.
+**M3DocDep: Multi-modal, Multi-page, Multi-document Dependency Chunking with Large Vision-Language Models**<br>
+Joongmin Shin, Jeongbae Park, Jaehyung Seo, Heuiseok Lim<br>
+*CVPR 2026*
 
-[[Project Page](https://shinjm-maker.github.io/M3DocDep/)] [[Publication Page](https://shinjm-maker.github.io/publications/m3docdep.html)]
+[[Project Page](https://shinjm-maker.github.io/M3DocDep/)] [[Paper](https://openaccess.thecvf.com/content/CVPR2026/papers/Shin_M3DocDep_Multi-modal_Multi-page_Multi-document_Dependency_Chunking_with_Large_Vision-Language_Models_CVPR_2026_paper.pdf)] [[Supplementary](https://openaccess.thecvf.com/content/CVPR2026/supplemental/Shin_M3DocDep_Multi-modal_Multi-page_CVPR_2026_supplemental.pdf)] [[arXiv](https://arxiv.org/abs/2605.18774)] [[Publication Page](https://shinjm-maker.github.io/publications/m3docdep.html)]
 
-## Files
+M3DocDep uses large vision-language models to infer cross-page and cross-document dependency structures in complex unstructured documents. The resulting structure-aware multimodal chunks improve evidence retrieval and downstream question answering in retrieval-augmented pipelines.
 
+<p align="center">
+  <img src="assets/architecture.png" alt="M3DocDep pipeline" width="100%">
+</p>
+
+## About this repository
+
+This repository hosts the source of the [project page](https://shinjm-maker.github.io/M3DocDep/), served with GitHub Pages from the `main` branch. The page is a single `index.html` file with images in `assets/`.
+
+## Citation
+
+```bibtex
+@InProceedings{Shin_2026_CVPR,
+    author    = {Shin, Joongmin and Park, Jeongbae and Seo, Jaehyung and Lim, Heuiseok},
+    title     = {M3DocDep: Multi-modal, Multi-page, Multi-document Dependency Chunking with Large Vision-Language Models},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2026},
+    pages     = {16603-16613}
+}
 ```
-.
-├── index.html              # Main page (single-file: HTML + CSS + JS inlined)
-├── assets/
-│   ├── architecture.png    # Figure 1: M3DocDep pipeline
-│   └── qualitative.png     # Trolleybus qualitative example
-└── README.md               # This file
-```
 
-## Quick start
+## Acknowledgment
 
-Open `index.html` in a browser. That's it — no build step.
-
-## Deploying to GitHub Pages (recommended)
-
-1. Create a public repo on GitHub. Common naming conventions:
-   - **`m3docdep.github.io`** — page lives at `https://m3docdep.github.io/`
-   - **`<username>/m3docdep`** — page lives at `https://<username>.github.io/m3docdep/`
-
-2. Push these files to the repo's `main` branch:
-   ```bash
-   git init
-   git add index.html assets/ README.md
-   git commit -m "initial project page"
-   git branch -M main
-   git remote add origin git@github.com:<username>/m3docdep.git
-   git push -u origin main
-   ```
-
-3. On GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main`, `/` (root) → Save**.
-
-4. Wait ~1 minute. Page goes live at the URL shown in the Pages section.
-
-## Customization checklist
-
-Before you publish, update these in `index.html`:
-
-- [ ] **Hero badge buttons** — replace `href="#"` with real URLs:
-  - `Paper` → arXiv PDF link or camera-ready PDF
-  - `arXiv` → arXiv abstract page
-  - `Code` → GitHub repo URL
-- [ ] **Footer** — confirm contact email and GitHub repo link
-- [ ] **BibTeX** — once the paper is officially published, update the citation block (the `@inproceedings{...}` entry near the bottom of the file). Replace the current placeholder with the official ACM/IEEE citation if needed.
-- [ ] **OG meta tags** — for nice link previews on Twitter/Slack, edit the `<meta property="og:title">` and `og:description` tags in `<head>`.
-
-Search the file for `href="#"` to find all placeholder links.
-
-## Updating content
-
-The page is a single HTML file with inline CSS/JS. To edit:
-
-- **Text** — edit directly in the `<body>` markup. Sections are clearly commented (`<!-- ════════ METHOD ════════ -->` etc.).
-- **Numbers** — search for the value (e.g., `+10.6%`, `82.9 / 76.5`) to find and update.
-- **Colors** — edit the CSS variables at the top (`:root { ... }`).
-- **Fonts** — Fraunces (serif headers) and IBM Plex Sans (body) load from Google Fonts. Edit the `<link>` tag in `<head>` to swap.
-- **Images** — replace files in `assets/` (keep filenames the same to avoid editing HTML).
-
-## Browser support
-
-- Modern browsers (Chrome, Firefox, Safari, Edge — last 2 versions).
-- Uses `IntersectionObserver` for scroll reveals (Safari 12.1+, all modern browsers).
-- `backdrop-filter` on sticky nav (degrades gracefully on older browsers).
-- Mobile-responsive via media queries (breakpoint at 720px).
-
-## Notes
-
-- Page weight: ~2.2 MB (mostly the qualitative.png image at 540 KB; architecture.png at 1.6 MB). For faster loading, consider running both PNGs through `pngquant` or converting to WebP.
-- No JavaScript framework — vanilla HTML/CSS/JS only. Edit with any text editor.
-- No tracking, no external scripts beyond Google Fonts.
-
-## License
-
-See LICENSE in the main code repository.
+The project page template is adapted from [Nerfies](https://github.com/nerfies/nerfies.github.io) and is licensed under [CC BY-SA 4.0](http://creativecommons.org/licenses/by-sa/4.0/).
